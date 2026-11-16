@@ -2,6 +2,15 @@
 
 把《王者荣耀》全英雄、全皮肤的语音台词做成一个可以在手机浏览器里浏览、搜索、收藏、播放的静态站点。
 
+## 线上地址
+
+| 入口 | 说明 |
+|---|---|
+| **<https://wzry.panini-pigs.cn>** | 主站（Cloudflare Pages + 自定义域名） |
+| <https://wzry-voice.pages.dev> | CF Pages 默认域名 |
+| <https://panini-pig.github.io/wzry-voice/> | GitHub Pages 镜像 |
+| `https://audio.wzry.panini-pigs.cn` | 音频（Cloudflare R2） |
+
 - **134 位英雄 · 1,001 款皮肤 · 18,160 条台词**（其中 18,139 条可播放）
 - 数据源：腾讯「荣耀萤火素材库」（iCreate）的官方素材接口
 - 音频托管：Cloudflare R2（`audio.wzry.panini-pigs.cn`），约 1.3 GB
@@ -62,18 +71,23 @@ scripts/shot.mjs             Playwright 手机端截图自测
 
 ## 部署
 
-### Cloudflare Pages（线上主站：wzry.panini-pigs.cn）
+站点已接入两条自动发布链路，**push 到 `main` 即自动上线**：
+
+1. **Cloudflare Pages**（主站）：项目 `wzry-voice` 已 Connect 到本仓库，构建命令 `npm run build`，输出 `dist`，绑定 `wzry.panini-pigs.cn`。
+2. **GitHub Pages**（镜像）：`.github/workflows/deploy.yml` 用 `actions/deploy-pages` 发布到 `panini-pig.github.io/wzry-voice/`。
+
+手动发布（应急）：
 
 ```bash
-npx wrangler pages deploy dist --project-name=wzry-voice
+npm run deploy     # 构建 + wrangler pages deploy
 ```
 
-首次部署后在 CF Dashboard → Pages → 该项目 → Custom domains 绑定 `wzry.panini-pigs.cn`。
-从仓库自动部署时，在 GitHub Secrets 里配 `CLOUDFLARE_API_TOKEN` 与 `CLOUDFLARE_ACCOUNT_ID`。
+## 日常维护
 
-### GitHub Pages
-
-仓库 Settings → Pages → Source 选 **GitHub Actions**，推送到 `main` 会自动构建发布。
+- **新增英雄/皮肤**：重新抓一次 iCreate（需重新登录拿 JWT）→ `node scripts/normalize.mjs` → 把新增 mp3 传到 R2 → `git push`
+- **音频新增上传**：`rclone copy data/audio_clean r2:wzry-voice/audio --transfers 24 --s3-no-check-bucket`
+- **R2 缓存头**：上传时带 `Cache-Control: public,max-age=31536000,immutable`
+- **iCreate 的音频链接只有 24 小时有效期**（去掉 `?sign=` 直接 403），所以必须自存，不能热链
 
 ## 版权
 
