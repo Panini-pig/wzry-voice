@@ -36,7 +36,6 @@ export default function HeroPage({
         l.rel = 'prefetch';
         l.as = 'fetch';
         l.href = v.audio!;
-        l.crossOrigin = 'anonymous';
         document.head.appendChild(l);
         return l;
       });
