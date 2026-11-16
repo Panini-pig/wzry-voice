@@ -61,8 +61,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   });
 
   if (!audioRef.current && typeof window !== 'undefined') {
-    audioRef.current = new Audio();
-    audioRef.current.preload = 'metadata';
+    const existing = document.getElementById('wzry-audio') as HTMLAudioElement | null;
+    const a = existing ?? new Audio();
+    if (!existing) {
+      a.id = 'wzry-audio';
+      a.preload = 'metadata';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+    }
+    audioRef.current = a;
   }
 
   useEffect(() => {

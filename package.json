@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "wzry-voice",
   "private": true,
   "version": "1.0.0",
@@ -7,7 +7,8 @@
     "prepare:data": "node scripts/copy-data.mjs",
     "dev": "npm run prepare:data && vite",
     "build": "npm run prepare:data && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && npx --yes wrangler@3.99.0 pages deploy dist --project-name=wzry-voice --branch=main --commit-dirty=true"
   },
   "dependencies": {
     "react": "^18.3.1",
