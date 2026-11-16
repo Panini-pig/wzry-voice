@@ -38,6 +38,22 @@ export default function HeroPage({
     return hero.skins.filter((s) => s.voiceCount > 0);
   }, [hero]);
 
+  const groups = useMemo(() => {
+    const entries = filtered.map((v, idx) => ({ v, idx }));
+    if (skinId !== 'all') return [{ title: null as string | null, items: entries }];
+
+    const order = new Map(skinsWithAudio.map((s, i) => [s.name, i]));
+    const bySkin = new Map<string, typeof entries>();
+    for (const e of entries) {
+      const k = e.v.skinName ?? '其他';
+      if (!bySkin.has(k)) bySkin.set(k, []);
+      bySkin.get(k)!.push(e);
+    }
+    return [...bySkin.entries()]
+      .sort((a, b) => (order.get(a[0]) ?? 99) - (order.get(b[0]) ?? 99))
+      .map(([title, items]) => ({ title: title as string | null, items }));
+  }, [filtered, skinId, skinsWithAudio]);
+
   const posterSkins = useMemo(() => hero?.skins.filter((s) => s.posterUrl) ?? [], [hero]);
 
   const openPoster = () => {
@@ -86,37 +102,51 @@ export default function HeroPage({
 
       {!voices && <div className="loading">载入台词…</div>}
 
-      <ul className="voice-list">
-        {filtered.map((v, i) => {
-          const active = current?.id === v.id;
-          return (
-            <li key={v.id} className={active ? 'voice is-active' : 'voice'}>
-              <button
-                className="voice__play"
-                aria-label={active && playing ? '暂停' : '播放'}
-                onClick={() => (active ? toggle() : playQueue(filtered, i, hero.name))}
-              >
-                {active && playing ? '❚❚' : '▶'}
-              </button>
-              <div className="voice__body" onClick={() => (active ? toggle() : playQueue(filtered, i, hero.name))}>
-                <p className="voice__text">{v.text}</p>
-                <p className="voice__meta">
-                  <span className="voice__cat">{v.category}</span>
-                  {v.skinName && <span>{v.skinName}</span>}
-                  <span>{fmtDuration(v.duration)}</span>
-                </p>
-              </div>
-              <button
-                className={isFav(v.id) ? 'voice__fav is-on' : 'voice__fav'}
-                onClick={() => toggleFav(v, hero.id, hero.name)}
-                aria-label="收藏"
-              >
-                {isFav(v.id) ? '★' : '☆'}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      {voices &&
+        groups.map((g) => (
+          <section key={g.title ?? 'all'} className="skin-section">
+            {g.title && (
+              <h3 className="skin-section__title">
+                {g.title}
+                <span>{g.items.length}</span>
+              </h3>
+            )}
+            <ul className="voice-list">
+              {g.items.map(({ v, idx }) => {
+                const active = current?.id === v.id;
+                return (
+                  <li key={v.id} className={active ? 'voice is-active' : 'voice'}>
+                    <button
+                      className="voice__play"
+                      aria-label={active && playing ? '暂停' : '播放'}
+                      onClick={() => (active ? toggle() : playQueue(filtered, idx, hero.name))}
+                    >
+                      {active && playing ? '❚❚' : '▶'}
+                    </button>
+                    <div
+                      className="voice__body"
+                      onClick={() => (active ? toggle() : playQueue(filtered, idx, hero.name))}
+                    >
+                      <p className="voice__text">{v.text}</p>
+                      <p className="voice__meta">
+                        <span className="voice__cat">{v.category}</span>
+                        {!g.title && v.skinName && <span>{v.skinName}</span>}
+                        <span>{fmtDuration(v.duration)}</span>
+                      </p>
+                    </div>
+                    <button
+                      className={isFav(v.id) ? 'voice__fav is-on' : 'voice__fav'}
+                      onClick={() => toggleFav(v, hero.id, hero.name)}
+                      aria-label="收藏"
+                    >
+                      {isFav(v.id) ? '★' : '☆'}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
 
       {posterIndex !== null && (
         <PosterModal

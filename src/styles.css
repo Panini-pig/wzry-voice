@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #08080b;
   --panel: #121216;
   --panel-2: #191920;
@@ -288,6 +288,32 @@ img {
   list-style: none;
   margin: 6px 0 0;
   padding: 0;
+}
+
+.skin-section {
+  margin-top: 6px;
+}
+
+.skin-section__title {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 8px 0 6px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--gold);
+  background: linear-gradient(var(--bg) 72%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.skin-section__title span {
+  font-size: 10.5px;
+  color: var(--muted);
 }
 
 .voice {
