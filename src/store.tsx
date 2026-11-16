@@ -65,7 +65,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const a = existing ?? new Audio();
     if (!existing) {
       a.id = 'wzry-audio';
-      a.preload = 'metadata';
+      a.preload = 'auto';
       a.style.display = 'none';
       document.body.appendChild(a);
     }

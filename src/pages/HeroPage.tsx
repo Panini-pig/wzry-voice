@@ -25,6 +25,24 @@ export default function HeroPage({
     loadVoices(heroId).then(setVoices).catch(console.error);
   }, [heroId]);
 
+  // 预热前几条语音，点播放时几乎零等待
+  useEffect(() => {
+    if (!voices) return;
+    const links = voices
+      .filter((v) => v.audio)
+      .slice(0, 3)
+      .map((v) => {
+        const l = document.createElement('link');
+        l.rel = 'prefetch';
+        l.as = 'fetch';
+        l.href = v.audio!;
+        l.crossOrigin = 'anonymous';
+        document.head.appendChild(l);
+        return l;
+      });
+    return () => links.forEach((l) => l.remove());
+  }, [voices]);
+
   const playable = useMemo(() => (voices ?? []).filter((v) => v.audio), [voices]);
 
   const filtered = useMemo(() => {
