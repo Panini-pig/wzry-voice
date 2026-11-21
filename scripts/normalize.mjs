@@ -25,6 +25,7 @@ for (const t of tagList) {
 }
 
 // 官方公开英雄表（拿 ename / 拼音 / 皮肤数量顺序）
+const officialRoles = await readJSON(path.join(RAW, 'hero_roles.json')).catch(() => ({}));
 const publicHeroes = await fetch(
   'https://pvp.qq.com/web201605/js/herolist.json'
 ).then((r) => r.json());
@@ -41,7 +42,34 @@ for (const d of await fs.readdir(audioDir, { withFileTypes: true })) {
 }
 
 // ---------- 文本工具 ----------
+// iCreate 的 career 编码顺序和官方 hero_type 完全不同：
+// 用 77 个单职业英雄做交叉验证得出 1=刺客 2=战士 3=法师 4=射手 5=辅助 6=坦克
+const ICREATE_CAREER = { 1: '刺客', 2: '战士', 3: '法师', 4: '射手', 5: '辅助', 6: '坦克' };
 const CAREER = { 1: '战士', 2: '法师', 3: '坦克', 4: '刺客', 5: '射手', 6: '辅助' };
+const ROLE_ORDER = ['战士', '法师', '坦克', '刺客', '射手', '辅助'];
+
+const rolesOf = (career, pub, name, officialRole) => {
+  // 元流之子 是多形态英雄，职业取标签名后缀（坦克/辅助/法师/刺客/射手），不能用通用数据
+  if (String(name).startsWith('元流之子')) {
+    const m = String(name).match(/(战士|法师|坦克|刺客|射手|辅助)$/);
+    if (m) return [m[1]];
+  }
+  const fromOfficial = String(officialRole ?? '')
+    .split(/[\/、,，]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  let list = fromOfficial;
+  if (!list.length) list = (career ?? []).map((c) => ICREATE_CAREER[Number(c)]).filter(Boolean);
+  if (!list.length && pub) {
+    list = [pub.hero_type, pub.hero_type2].filter((t) => Number(t) > 0).map((t) => CAREER[Number(t)]);
+  }
+  if (!list.length) {
+    // 元流之子 等多形态英雄：标签名后缀就是职业
+    const m = String(name).match(/(战士|法师|坦克|刺客|射手|辅助)$/);
+    if (m) list = [m[1]];
+  }
+  return [...new Set(list)].sort((a, b) => ROLE_ORDER.indexOf(a) - ROLE_ORDER.indexOf(b));
+};
 
 const CATEGORY_RULES = [
   ['相遇', /相遇/],
@@ -175,7 +203,7 @@ for (const h of heroList) {
     name,
     title,
     slug: pub?.id_name ?? `hero-${h.heroId}`,
-    roles: (h.career ?? []).map((c) => CAREER[c]).filter(Boolean),
+    roles: rolesOf(h.career, pub, name, officialRoles[String(h.heroId)]?.role),
     pubTime: h.pubTime ?? null,
     isNew: Boolean(h.isNew),
     avatarUrl,
