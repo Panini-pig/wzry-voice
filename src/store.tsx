@@ -26,6 +26,7 @@ interface PlayerState {
   duration: number;
   sleepLeft: number | null;
   playQueue: (list: Voice[], index: number, heroName: string) => void;
+  jumpTo: (index: number) => void;
   toggle: () => void;
   next: () => void;
   prev: () => void;
@@ -103,6 +104,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const n = (index - 1 + queue.length) % queue.length;
     playAt(queue, n, heroName);
   }, [queue, index, playAt, heroName]);
+
+  const jumpTo = useCallback(
+    (i: number) => {
+      if (!queue.length) return;
+      playAt(queue, Math.max(0, Math.min(queue.length - 1, i)), heroName);
+    },
+    [queue, playAt, heroName]
+  );
 
   const toggle = useCallback(() => {
     const a = audioRef.current;
@@ -200,6 +209,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       duration,
       sleepLeft,
       playQueue: playAt,
+      jumpTo,
       toggle,
       next,
       prev,
@@ -210,7 +220,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       isFav: (id: string) => Boolean(favs[id]),
       toggleFav,
     }),
-    [current, heroName, queue, index, playing, rate, progress, duration, sleepLeft, playAt, toggle, next, prev, seek, setRate, setSleep, favs, toggleFav]
+    [current, heroName, queue, index, playing, rate, progress, duration, sleepLeft, playAt, jumpTo, toggle, next, prev, seek, setRate, setSleep, favs, toggleFav]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
